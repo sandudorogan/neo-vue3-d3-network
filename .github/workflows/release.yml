@@ -32,6 +32,6 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: latest
 
-      - run: npm publish --provenance --access public
+      - run: npm publish --access public
