@@ -38,6 +38,9 @@ export function useForceSimulation(options: UseForceSimulationOptions) {
     if (simulation.alpha() > simulation.alphaMin()) {
       animationFrameId = requestAnimationFrame(tick)
     }
+    else {
+      animationFrameId = 0
+    }
   }
 
   function buildSimulation() {

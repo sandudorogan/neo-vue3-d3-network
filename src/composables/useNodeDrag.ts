@@ -64,6 +64,7 @@ export function useNodeDrag(options: UseNodeDragOptions) {
       return
 
     event.stopPropagation()
+    event.preventDefault()
 
     const { clientX, clientY } = getEventCoords(event)
     const graphPos = screenToGraph(clientX, clientY)

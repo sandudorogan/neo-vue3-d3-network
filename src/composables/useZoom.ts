@@ -33,6 +33,16 @@ export function useZoom(options: UseZoomOptions) {
 
     zoomBehavior = zoom<SVGSVGElement, undefined>()
       .scaleExtent([0.1, 10])
+      .filter((event: Event) => {
+        // Allow wheel events through for scroll-zoom on nodes
+        if (event.type === 'wheel')
+          return true
+        // Block drag-pan when the event originates from a node or link
+        const target = event.target as Element
+        if (target.closest('[data-node-id]') || target.closest('[data-link-id]'))
+          return false
+        return true
+      })
       .on('zoom', handleZoom)
 
     if (toValue(options.zoomable) !== false) {
