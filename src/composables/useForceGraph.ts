@@ -37,7 +37,7 @@ export function useForceGraph(options: ForceGraphOptions) {
     zoomable: options.zoomable,
   })
 
-  useNodeDrag({
+  const drag = useNodeDrag({
     containerRef,
     nodes: simulation.nodes,
     transform: zoomState.transform,
@@ -160,5 +160,6 @@ export function useForceGraph(options: ForceGraphOptions) {
     resetZoom: zoomState.resetZoom,
     restart: simulation.restart,
     screenshot,
+    consumeDrag: drag.consumeDrag,
   }
 }

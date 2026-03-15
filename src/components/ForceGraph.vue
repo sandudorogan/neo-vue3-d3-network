@@ -95,6 +95,8 @@ function isLinkSelected(link: SimulatedLink): boolean {
 }
 
 function onNodeClick(node: SimulatedNode, event: MouseEvent) {
+  if (graph.consumeDrag())
+    return
   if (props.selectable) {
     graph.toggleNodeSelection(node.id)
   }

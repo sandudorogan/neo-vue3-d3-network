@@ -15,6 +15,7 @@ interface UseNodeDragOptions {
 export function useNodeDrag(options: UseNodeDragOptions) {
   let draggedNode: SimulatedNode | null = null
   let dragOffset = { x: 0, y: 0 }
+  let didDrag = false
 
   function findNodeFromEvent(event: Event): SimulatedNode | null {
     let target = event.target as Element | null
@@ -70,6 +71,7 @@ export function useNodeDrag(options: UseNodeDragOptions) {
     const graphPos = screenToGraph(clientX, clientY)
     dragOffset = { x: graphPos.x - node.x, y: graphPos.y - node.y }
     draggedNode = node
+    didDrag = false
     node.fx = node.x
     node.fy = node.y
 
@@ -82,6 +84,7 @@ export function useNodeDrag(options: UseNodeDragOptions) {
 
     const { clientX, clientY } = getEventCoords(event)
     const graphPos = screenToGraph(clientX, clientY)
+    didDrag = true
     draggedNode.fx = graphPos.x - dragOffset.x
     draggedNode.fy = graphPos.y - dragOffset.y
     options.restart(0.3)
@@ -133,4 +136,12 @@ export function useNodeDrag(options: UseNodeDragOptions) {
     if (currentEl)
       detach(currentEl)
   })
+
+  return {
+    consumeDrag() {
+      const wasDrag = didDrag
+      didDrag = false
+      return wasDrag
+    },
+  }
 }
