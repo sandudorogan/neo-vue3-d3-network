@@ -99,30 +99,28 @@ const graph = ref()
 
 ## Composables
 
-For more control, use the composables directly instead of the component. Each composable handles one concern, and they stack on top of each other — start with data, add simulation, then layer on zoom, drag, selection, and screenshots as needed.
+For more control, use the composables directly. Each one handles a single concern and they stack on top of each other.
 
 ### useForceGraph — all-in-one
 
-The simplest way to use composables. Wires everything together for you:
+Wires everything together:
 
 ```ts
 import { useForceGraph } from 'neo-vue3-d3-network'
 
 const {
-  containerRef,       // bind to your <svg> element
-  simulatedNodes,     // reactive node positions (from useForceSimulation)
-  simulatedLinks,     // reactive link positions (from useForceSimulation)
-  transform,          // current zoom/pan state (from useZoom)
-  selectedNodes,      // selected nodes map (from useSelection)
-  selectedLinks,      // selected links map (from useSelection)
+  containerRef,       // bind to your <svg>
+  simulatedNodes,     // reactive node positions
+  simulatedLinks,     // reactive link positions
+  transform,          // zoom/pan state
+  selectedNodes,      // selected nodes map
+  selectedLinks,      // selected links map
   selectNode, deselectNode, toggleNodeSelection,
   selectLink, deselectLink, toggleLinkSelection,
   clearSelection,
   pinNode, unpinNode,
   zoomTo, zoomToFit, resetZoom,
-  restart,
-  screenshot,
-  consumeDrag,
+  restart, screenshot, consumeDrag,
 } = useForceGraph({
   nodes: ref([{ id: 1 }, { id: 2 }, { id: 3 }]),
   links: ref([{ source: 1, target: 2 }, { source: 2, target: 3 }]),
@@ -134,124 +132,66 @@ const {
 
 ### Stacking composables individually
 
-When you need finer control, use the lower-level composables directly. Each one returns values that feed into the next:
+Use the lower-level composables when you need finer control. Each layer's output feeds into the next:
 
 ```ts
 import {
-  useGraphData,
-  useForceSimulation,
-  useSelection,
-  useZoom,
-  useNodeDrag,
-  useScreenshot,
+  useGraphData, useForceSimulation, useZoom,
+  useNodeDrag, useSelection, useScreenshot,
 } from 'neo-vue3-d3-network'
-```
 
-#### Layer 1: Data processing
-
-`useGraphData` normalizes raw input into simulation-ready format. Start here.
-
-```ts
+// Layer 1 — normalize raw input
 const { processedNodes, processedLinks, nodeMap } = useGraphData({
-  nodes: ref([{ id: 1 }, { id: 2 }, { id: 3 }]),
-  links: ref([{ source: 1, target: 2 }, { source: 2, target: 3 }]),
+  nodes, links,
   nodeFormatter: (node) => ({ ...node, _size: node.size ?? 5 }),
 })
-```
 
-#### Layer 2: Force simulation
-
-`useForceSimulation` takes processed data and runs the d3-force layout. Node positions update reactively on every tick.
-
-```ts
+// Layer 2 — run d3-force layout (positions update reactively each tick)
 const containerRef = ref<SVGSVGElement | null>(null)
 const size = shallowRef({ width: 800, height: 600 })
-
-const { nodes, links, restart } = useForceSimulation({
+const { nodes: simNodes, links: simLinks, restart } = useForceSimulation({
   nodes: processedNodes,    // ← from useGraphData
   links: processedLinks,    // ← from useGraphData
   force: 500,
-  forces: { center: false, x: 0.5, y: 0.5, manyBody: true, link: true },
   size,
 })
-```
 
-#### Layer 3: Zoom + pan
-
-`useZoom` adds zoom/pan to the SVG container. Returns a `transform` that other composables need.
-
-```ts
+// Layer 3 — zoom + pan
 const { transform, zoomTo, resetZoom, zoomToFitBounds } = useZoom({
   containerRef,
   zoomable: true,
 })
-```
 
-#### Layer 4: Node dragging
-
-`useNodeDrag` enables dragging nodes. Needs the simulated nodes, the zoom transform (to convert screen→graph coordinates), and the simulation's `restart` function to reheat on drag.
-
-```ts
+// Layer 4 — node dragging (needs simulation nodes, zoom transform, and restart)
 const { consumeDrag } = useNodeDrag({
   containerRef,
-  nodes,          // ← from useForceSimulation
-  transform,      // ← from useZoom
+  nodes: simNodes,    // ← from useForceSimulation
+  transform,          // ← from useZoom
+  restart,            // ← from useForceSimulation
   draggable: true,
-  restart,        // ← from useForceSimulation
-  onDragStart: (node, event) => { /* ... */ },
-  onDragEnd: (node, event) => { /* ... */ },
 })
-```
 
-#### Layer 5: Selection
+// Layer 5 — selection (standalone)
+const { selectedNodes, selectedLinks, toggleNodeSelection, clearSelection } = useSelection()
 
-`useSelection` is standalone — it just manages which nodes/links are selected.
-
-```ts
-const {
-  selectedNodes, selectedLinks,
-  selectNode, deselectNode, toggleNodeSelection,
-  selectLink, deselectLink, toggleLinkSelection,
-  clearSelection,
-} = useSelection()
-```
-
-#### Layer 6: Screenshots
-
-`useScreenshot` exports the current SVG state as PNG or SVG.
-
-```ts
+// Layer 6 — screenshots (standalone)
 const { screenshot } = useScreenshot({ containerRef })
-const blob = await screenshot({ format: 'png', background: '#fff' })
 ```
 
 ### Pick what you need
 
-You don't have to use every layer. Some practical combinations:
+You don't have to use every layer:
 
-**Simulation only** (no interaction) — static layout for a dashboard:
 ```ts
-const { processedNodes, processedLinks } = useGraphData({ nodes, links })
-const { nodes: positions, links: resolvedLinks } = useForceSimulation({
-  nodes: processedNodes,
-  links: processedLinks,
-  size: shallowRef({ width: 800, height: 600 }),
-})
-```
-
-**Simulation + zoom** (read-only interactive graph):
-```ts
+// Simulation only — static layout, no interaction
 const data = useGraphData({ nodes, links })
 const sim = useForceSimulation({ nodes: data.processedNodes, links: data.processedLinks, size })
+
+// Add zoom for a read-only interactive graph
 const { transform } = useZoom({ containerRef, zoomable: true })
-```
 
-**Full stack minus screenshots** — just skip `useScreenshot`:
-```ts
-const data = useGraphData({ nodes, links })
-const sim = useForceSimulation({ nodes: data.processedNodes, links: data.processedLinks, size })
-const zoom = useZoom({ containerRef })
-const drag = useNodeDrag({ containerRef, nodes: sim.nodes, transform: zoom.transform, restart: sim.restart })
+// Full stack minus screenshots
+const drag = useNodeDrag({ containerRef, nodes: sim.nodes, transform, restart: sim.restart })
 const selection = useSelection()
 ```
 
