@@ -2,6 +2,10 @@
   "name": "neo-vue3-d3-network",
   "type": "module",
   "version": "0.1.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sandudorogan/neo-vue3-d3-network.git"
+  },
   "exports": {
     ".": {
       "types": "./dist/types/index.d.ts",
