@@ -26,7 +26,7 @@ jobs:
 
       - run: bun run build
 
-      - run: bunx changelogen gh release
+      - run: bunx changelogen gh release --token $GITHUB_TOKEN
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
