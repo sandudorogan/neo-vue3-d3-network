@@ -1,6 +1,6 @@
 # neo-vue3-d3-network
 
-A Vue 3 force-directed graph component powered by d3-force. Renders network graphs as SVG with support for zoom, pan, drag, selection, labels, curved links, custom node icons, and screenshots.
+Vue 3 force-directed graph component powered by d3-force. SVG rendering with zoom, pan, drag, selection, labels, curved links, and screenshots.
 
 ## Install
 
@@ -34,47 +34,48 @@ const links = [
 
 ## Props
 
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `nodes` | `GraphNode[]` | required | Array of nodes |
-| `links` | `GraphLink[]` | required | Array of links |
-| `nodeSize` | `number` | `5` | Default node radius |
-| `linkWidth` | `number` | `1` | Default link stroke width |
-| `force` | `number` | `500` | Force simulation strength |
-| `forces` | `ForcesConfig` | — | Enable/disable individual forces (center, x, y, manyBody, link, collide) |
-| `customForces` | `Record<string, Force>` | — | Custom d3 forces |
-| `nodeLabels` | `boolean` | `false` | Show node labels |
-| `linkLabels` | `boolean` | `false` | Show link labels |
-| `fontSize` | `number` | `10` | Label font size |
-| `curvedLinks` | `boolean` | `false` | Use curved link paths |
-| `draggable` | `boolean` | `true` | Enable node dragging |
-| `zoomable` | `boolean` | `true` | Enable zoom and pan |
-| `selectable` | `boolean` | `true` | Enable node/link selection |
-| `nodeFormatter` | `(node) => node` | — | Transform nodes before rendering |
-| `linkFormatter` | `(link) => link` | — | Transform links before rendering |
-| `simulationFormatter` | `(sim) => sim` | — | Configure the d3 simulation directly |
+| Prop | Type | Default |
+|------|------|---------|
+| `nodes` | `GraphNode[]` | required |
+| `links` | `GraphLink[]` | required |
+| `nodeSize` | `number` | `5` |
+| `linkWidth` | `number` | `1` |
+| `force` | `number` | `500` |
+| `forces` | `ForcesConfig` | — |
+| `customForces` | `Record<string, Force>` | — |
+| `nodeLabels` | `boolean` | `false` |
+| `linkLabels` | `boolean` | `false` |
+| `fontSize` | `number` | `10` |
+| `curvedLinks` | `boolean` | `false` |
+| `draggable` | `boolean` | `true` |
+| `zoomable` | `boolean` | `true` |
+| `selectable` | `boolean` | `true` |
+| `nodeFormatter` | `(node) => node` | — |
+| `linkFormatter` | `(link) => link` | — |
+| `simulationFormatter` | `(sim) => sim` | — |
 
 ## Events
 
-| Event | Payload | Description |
-|-------|---------|-------------|
-| `node-click` | `(node, event)` | Node clicked |
-| `link-click` | `(link, event)` | Link clicked |
-| `node-double-click` | `(node, event)` | Node double-clicked |
-| `node-context-menu` | `(node, event)` | Node right-clicked |
-| `link-double-click` | `(link, event)` | Link double-clicked |
-| `link-context-menu` | `(link, event)` | Link right-clicked |
-| `node-drag-start` | `(node, event)` | Node drag started |
-| `node-drag-end` | `(node, event)` | Node drag ended |
-| `zoom-change` | `(transform)` | Zoom/pan changed |
+| Event | Payload |
+|-------|---------|
+| `node-click` | `(node, event)` |
+| `link-click` | `(link, event)` |
+| `node-double-click` | `(node, event)` |
+| `node-context-menu` | `(node, event)` |
+| `link-double-click` | `(link, event)` |
+| `link-context-menu` | `(link, event)` |
+| `node-drag-start` | `(node, event)` |
+| `node-drag-end` | `(node, event)` |
+| `zoom-change` | `(transform)` |
 
-## Exposed methods
+## Methods
 
 Access via template ref:
 
 ```vue
 <script setup>
 const graph = ref()
+graph.value.zoomToFit()
 </script>
 
 <template>
@@ -86,16 +87,18 @@ const graph = ref()
 - `selectLink(id)` / `deselectLink(id)` / `toggleLinkSelection(id)`
 - `clearSelection()`
 - `pinNode(id)` / `unpinNode(id)`
-- `zoomTo(transform)` / `zoomToFit()` / `resetZoom()`
+- `zoomTo(scale)` / `zoomToFit()` / `resetZoom()`
 - `restart()`
-- `screenshot(options?)` — export as PNG or SVG
+- `screenshot(options?)` — PNG or SVG blob
 
 ## Slots
 
-- `#node="{ node, selected, pinned }"` — custom node rendering
-- `#link="{ link, selected }"` — custom link rendering
-- `#node-label="{ node }"` — custom node label
-- `#overlay="{ transform, nodes, links }"` — SVG overlay layer
+| Slot | Props |
+|------|-------|
+| `#node` | `{ node, selected, pinned }` |
+| `#link` | `{ link, selected }` |
+| `#node-label` | `{ node }` |
+| `#overlay` | `{ transform, nodes, links }` |
 
 ## Composables
 
@@ -132,7 +135,7 @@ const {
 
 ### Stacking composables individually
 
-Use the lower-level composables when you need finer control. Each layer's output feeds into the next:
+Each layer's output feeds into the next:
 
 ```ts
 import {
@@ -180,8 +183,6 @@ const { screenshot } = useScreenshot({ containerRef })
 
 ### Pick what you need
 
-You don't have to use every layer:
-
 ```ts
 // Simulation only — static layout, no interaction
 const data = useGraphData({ nodes, links })
@@ -222,7 +223,7 @@ useScreenshot ──→ screenshot() (standalone, needs containerRef)
 
 ```bash
 bun install
-bun run dev        # run showcase app
+bun run dev        # showcase app
 bun run build      # build library
 bun run typecheck  # type check
 bun run lint       # lint
